@@ -119,6 +119,14 @@ class MemoryStore:
         with self.connect() as conn:
             return list(conn.execute("SELECT * FROM events ORDER BY created_at DESC LIMIT ?", (limit,)))
 
+    def recent_daily_summaries(self, limit: int = 14) -> list[sqlite3.Row]:
+        with self.connect() as conn:
+            return list(conn.execute("SELECT * FROM daily_summaries ORDER BY day DESC LIMIT ?", (limit,)))
+
+    def recent_reflections(self, limit: int = 14) -> list[sqlite3.Row]:
+        with self.connect() as conn:
+            return list(conn.execute("SELECT * FROM reflections ORDER BY created_at DESC LIMIT ?", (limit,)))
+
     def save_daily_summary(self, day: date, summary: str, categories: dict) -> sqlite3.Row:
         now = utc_now()
         with self.connect() as conn:
@@ -179,4 +187,3 @@ class MemoryStore:
 
 def utc_now() -> str:
     return datetime.now(timezone.utc).replace(microsecond=0).isoformat()
-

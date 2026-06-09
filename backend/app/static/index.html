@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Open Memory</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <header>
+    <h1>Open Memory</h1>
+    <div class="actions">
+      <button id="summarize">Summarize Today</button>
+      <button id="reflect">Reflect</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="compose">
+      <textarea id="eventText" placeholder="Drop a memory, transcript, idea, decision, or todo..."></textarea>
+      <button id="save">Save Memory</button>
+    </section>
+
+    <section class="grid">
+      <article>
+        <h2>Timeline</h2>
+        <div id="events" class="list"></div>
+      </article>
+      <article>
+        <h2>Daily Summary</h2>
+        <div id="summaries" class="list"></div>
+      </article>
+      <article>
+        <h2>Long-Term Memory</h2>
+        <div id="memories" class="list"></div>
+      </article>
+    </section>
+
+    <section class="ask">
+      <input id="question" placeholder="Ask your memory...">
+      <button id="ask">Ask</button>
+      <pre id="answer"></pre>
+    </section>
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

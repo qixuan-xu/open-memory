@@ -1,6 +1,8 @@
 from datetime import date
 
 from fastapi import FastAPI
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from backend.app.core.schemas import EventCreate, EventRead, QueryRequest, QueryResponse
 from backend.app.services.pipeline import MemoryPipeline
@@ -10,11 +12,17 @@ from backend.app.services.reflection import ReflectionEngine
 app = FastAPI(title="Open Memory", version="0.1.0")
 pipeline = MemoryPipeline()
 reflection_engine = ReflectionEngine(pipeline.store)
+app.mount("/static", StaticFiles(directory="backend/app/static"), name="static")
 
 
 @app.get("/health")
 def health() -> dict:
     return {"status": "ok", "system": "Open Memory"}
+
+
+@app.get("/")
+def dashboard():
+    return FileResponse("backend/app/static/index.html")
 
 
 @app.post("/events", response_model=EventRead)
@@ -25,6 +33,21 @@ def create_event(payload: EventCreate):
 @app.get("/events", response_model=list[EventRead])
 def list_events(limit: int = 50):
     return [row_to_event(row) for row in pipeline.store.recent_events(limit)]
+
+
+@app.get("/summaries")
+def list_summaries(limit: int = 14):
+    return [dict(row) for row in pipeline.store.recent_daily_summaries(limit)]
+
+
+@app.get("/memories")
+def list_memories(limit: int = 50):
+    return [dict(row) for row in pipeline.store.list_long_term_memories(limit)]
+
+
+@app.get("/reflections")
+def list_reflections(limit: int = 14):
+    return [dict(row) for row in pipeline.store.recent_reflections(limit)]
 
 
 @app.post("/summaries/{day}")
