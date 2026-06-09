@@ -46,6 +46,25 @@ Docker:
 docker compose up --build
 ```
 
+CLI:
+
+```bash
+open-memory setup --preset balanced
+open-memory models list
+open-memory models install whisper-small
+open-memory start
+```
+
+Model weights are not committed to Git. The CLI currently creates local config and model placeholders under `~/.open-memory`; future versions will download or import Whisper, embedding, and local reasoning models there.
+
+Planned Homebrew flow:
+
+```bash
+brew tap qixuan-xu/open-memory
+brew install open-memory
+open-memory setup
+```
+
 Seed a memory event:
 
 ```bash

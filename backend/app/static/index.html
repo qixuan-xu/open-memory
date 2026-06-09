@@ -8,7 +8,10 @@
 </head>
 <body>
   <header>
-    <h1>Open Memory</h1>
+    <div>
+      <h1>Open Memory</h1>
+      <p>Local-first AI memory cockpit</p>
+    </div>
     <div class="actions">
       <button id="summarize">Summarize Today</button>
       <button id="reflect">Reflect</button>
@@ -16,8 +19,11 @@
   </header>
 
   <main>
-    <section class="compose">
-      <textarea id="eventText" placeholder="Drop a memory, transcript, idea, decision, or todo..."></textarea>
+    <section class="command">
+      <div>
+        <span class="eyebrow">Capture</span>
+        <textarea id="eventText" placeholder="Drop a memory, transcript, idea, decision, or todo..."></textarea>
+      </div>
       <button id="save">Save Memory</button>
     </section>
 
@@ -37,7 +43,10 @@
     </section>
 
     <section class="ask">
-      <input id="question" placeholder="Ask your memory...">
+      <div>
+        <span class="eyebrow">Ask</span>
+        <input id="question" placeholder="Ask your memory...">
+      </div>
       <button id="ask">Ask</button>
       <pre id="answer"></pre>
     </section>

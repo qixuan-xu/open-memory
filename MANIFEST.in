@@ -1,0 +1,2 @@
+recursive-include backend/app/static *.html *.css *.js
+recursive-include models .gitkeep
