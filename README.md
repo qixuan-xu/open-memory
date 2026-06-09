@@ -1,6 +1,6 @@
-# Allen Memory OS
+# Open Memory
 
-Allen Memory OS is a personal AI memory system that turns ambient phone capture into a layered, searchable, self-improving memory base.
+Open Memory is a personal AI memory system that turns ambient phone capture into a layered, searchable, self-improving memory base.
 
 The project is designed around one principle: do not stuff a lifetime into a model context window. Build a memory pipeline instead.
 
@@ -27,7 +27,7 @@ This first version does not save raw audio by default. It assumes the iPhone app
 ## Quick Start
 
 ```bash
-cd /Users/qixuanxu/Desktop/Projects/allen-memory-os
+cd /Users/qixuanxu/Desktop/Projects/open-memory
 python -m venv .venv
 source .venv/bin/activate
 pip install -e ".[dev]"
@@ -98,7 +98,7 @@ curl -X POST http://127.0.0.1:8000/query \
 
 ## Philosophy
 
-Allen Memory OS should slowly learn:
+Open Memory should slowly learn:
 
 - what you care about
 - what you are building
@@ -107,4 +107,3 @@ Allen Memory OS should slowly learn:
 - which patterns help or hurt you
 
 The aim is not perfect surveillance. The aim is a useful second mind that gets better because it reflects, compresses, checks itself, and asks better questions.
-

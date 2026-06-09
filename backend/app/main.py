@@ -7,14 +7,14 @@ from backend.app.services.pipeline import MemoryPipeline
 from backend.app.services.reflection import ReflectionEngine
 
 
-app = FastAPI(title="Allen Memory OS", version="0.1.0")
+app = FastAPI(title="Open Memory", version="0.1.0")
 pipeline = MemoryPipeline()
 reflection_engine = ReflectionEngine(pipeline.store)
 
 
 @app.get("/health")
 def health() -> dict:
-    return {"status": "ok", "system": "Allen Memory OS"}
+    return {"status": "ok", "system": "Open Memory"}
 
 
 @app.post("/events", response_model=EventRead)
@@ -58,4 +58,3 @@ def row_to_event(row) -> dict:
         "source": row["source"],
         "created_at": row["created_at"],
     }
-

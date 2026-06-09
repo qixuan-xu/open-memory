@@ -1,5 +1,5 @@
 [project]
-name = "allen-memory-os"
+name = "open-memory"
 version = "0.1.0"
 description = "A local-first personal AI memory system with layered summaries and self-reflection."
 readme = "README.md"
@@ -22,4 +22,3 @@ vector = [
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
-

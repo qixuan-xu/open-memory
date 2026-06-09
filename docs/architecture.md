@@ -1,6 +1,6 @@
 # Architecture
 
-Allen Memory OS uses layered memory instead of a single giant prompt.
+Open Memory uses layered memory instead of a single giant prompt.
 
 ## Layers
 
@@ -45,4 +45,3 @@ Allen Memory OS uses layered memory instead of a single giant prompt.
 - Replace `summarizer.py` with GPT-5, Qwen, or a hybrid local/cloud model.
 - Add background jobs with APScheduler, Celery, Dramatiq, or Temporal.
 - Add encrypted sync once the iPhone app exists.
-

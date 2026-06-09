@@ -12,7 +12,7 @@ def test_memory_pipeline_round_trip(tmp_path):
 
     event = pipeline.ingest_event(
         EventCreate(
-            text="今天决定 Allen Memory OS 先做 FastAPI 和 SQLite MVP，再接 Whisper 和 iPhone VAD。",
+            text="今天决定 Open Memory 先做 FastAPI 和 SQLite MVP，再接 Whisper 和 iPhone VAD。",
             source="test",
         )
     )
@@ -21,13 +21,12 @@ def test_memory_pipeline_round_trip(tmp_path):
     assert event["importance"] >= 0.5
 
     summary = pipeline.summarize_day(date.today())
-    assert "Allen Memory OS" in summary["summary"]
+    assert "Open Memory" in summary["summary"]
 
     reflection = ReflectionEngine(store).reflect_on_day(date.today())
     assert "Reflection" in reflection["text"]
 
-    answer, events, memories = pipeline.query("Allen Memory OS MVP")
-    assert "Allen Memory OS" in answer
+    answer, events, memories = pipeline.query("Open Memory MVP")
+    assert "Open Memory" in answer
     assert events
     assert memories
-

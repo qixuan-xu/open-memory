@@ -1,6 +1,6 @@
 # Contributing
 
-Allen Memory OS is meant to be hackable and local-first.
+Open Memory is meant to be hackable and local-first.
 
 ## Development
 
@@ -26,4 +26,3 @@ uvicorn backend.app.main:app --reload
 - Add timeline export.
 - Add iPhone SwiftUI capture prototype.
 - Add a web dashboard for summaries and memory review.
-

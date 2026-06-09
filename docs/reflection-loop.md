@@ -1,6 +1,6 @@
 # Self-Reflection Loop
 
-The reflection loop is the part that makes Allen Memory OS more than a passive archive.
+The reflection loop is the part that makes Open Memory more than a passive archive.
 
 ## Daily Automation
 
@@ -46,4 +46,3 @@ When unsure, the agent should ask:
 - Is this still true?
 - Did your opinion change?
 - Is this project active, paused, or abandoned?
-
