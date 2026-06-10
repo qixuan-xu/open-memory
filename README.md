@@ -28,7 +28,8 @@ This first version does not save raw audio by default. It assumes the iPhone app
 ## Quick Start
 
 ```bash
-cd /Users/qixuanxu/Desktop/Projects/open-memory
+git clone https://github.com/qixuan-xu/open-memory.git
+cd open-memory
 python -m venv .venv
 source .venv/bin/activate
 pip install -e ".[dev]"
