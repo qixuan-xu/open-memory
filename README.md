@@ -92,6 +92,8 @@ curl -X POST http://127.0.0.1:8000/query \
 
 ## Roadmap
 
+The original product intent and early architecture notes live in [`docs/conversation-seed.md`](docs/conversation-seed.md).
+
 1. iPhone App capture
    - background audio capture
    - on-device VAD
