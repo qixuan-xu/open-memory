@@ -1,4 +1,6 @@
 from datetime import datetime
+from typing import Literal
+
 from pydantic import BaseModel, Field
 
 
@@ -15,8 +17,15 @@ class EventRead(BaseModel):
     text: str
     category: str
     importance: float
+    review_status: str
     source: str
     created_at: datetime
+
+
+class EventReviewUpdate(BaseModel):
+    review_status: Literal["inbox", "kept", "ignored"] | None = None
+    text: str | None = Field(default=None, min_length=1)
+    importance: float | None = Field(default=None, ge=0, le=1)
 
 
 class QueryRequest(BaseModel):
@@ -28,4 +37,3 @@ class QueryResponse(BaseModel):
     answer: str
     supporting_events: list[EventRead]
     supporting_memories: list[dict]
-

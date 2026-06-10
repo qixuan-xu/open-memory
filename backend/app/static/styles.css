@@ -65,6 +65,22 @@ button:hover {
   background: #46bf69;
 }
 
+button.secondary {
+  background: #2f3b4a;
+}
+
+button.secondary:hover {
+  background: #405066;
+}
+
+button.danger {
+  background: #b42318;
+}
+
+button.danger:hover {
+  background: #d92d20;
+}
+
 .actions {
   display: flex;
   gap: 8px;
@@ -97,10 +113,9 @@ textarea {
 .grid {
   display: grid;
   gap: 14px;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
-article, .ask, .compose {
 article, .ask, .command {
   background: rgba(15, 20, 27, 0.92);
   border: 1px solid #27313d;
@@ -119,6 +134,18 @@ article, .ask, .command {
   border: 1px solid #27313d;
   border-radius: 6px;
   padding: 10px;
+}
+
+.item-actions {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 10px;
+}
+
+.item-actions button {
+  min-height: 32px;
+  padding: 0 8px;
 }
 
 .meta {

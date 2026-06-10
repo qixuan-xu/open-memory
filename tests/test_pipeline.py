@@ -30,3 +30,29 @@ def test_memory_pipeline_round_trip(tmp_path):
     assert "Open Memory" in answer
     assert events
     assert memories
+
+
+def test_memory_inbox_review_and_promotion(tmp_path):
+    store = MemoryStore(tmp_path / "memory.sqlite3")
+    pipeline = MemoryPipeline(store)
+
+    event = pipeline.ingest_event(
+        EventCreate(
+            text="Open Memory v1 要先做 Memory Inbox，让用户决定哪些内容进入长期记忆。",
+            source="test",
+        )
+    )
+
+    assert event["review_status"] == "inbox"
+    assert store.list_inbox_events()
+
+    reviewed = store.update_event_review(event["id"], review_status="ignored")
+    assert reviewed["review_status"] == "ignored"
+    assert not store.recent_events()
+
+    kept = store.update_event_review(event["id"], review_status="kept", importance=0.9)
+    assert kept["current_importance"] == 0.9
+
+    memory = pipeline.promote_event(event["id"])
+    assert memory["text"] == kept["text"]
+    assert memory["confidence"] == 0.9

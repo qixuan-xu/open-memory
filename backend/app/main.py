@@ -1,10 +1,10 @@
 from datetime import date
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-from backend.app.core.schemas import EventCreate, EventRead, QueryRequest, QueryResponse
+from backend.app.core.schemas import EventCreate, EventRead, EventReviewUpdate, QueryRequest, QueryResponse
 from backend.app.services.pipeline import MemoryPipeline
 from backend.app.services.reflection import ReflectionEngine
 
@@ -33,6 +33,39 @@ def create_event(payload: EventCreate):
 @app.get("/events", response_model=list[EventRead])
 def list_events(limit: int = 50):
     return [row_to_event(row) for row in pipeline.store.recent_events(limit)]
+
+
+@app.get("/events/inbox", response_model=list[EventRead])
+def list_inbox_events(limit: int = 50):
+    return [row_to_event(row) for row in pipeline.store.list_inbox_events(limit)]
+
+
+@app.patch("/events/{event_id}", response_model=EventRead)
+def update_event(event_id: int, payload: EventReviewUpdate):
+    row = pipeline.store.update_event_review(
+        event_id=event_id,
+        review_status=payload.review_status,
+        text=payload.text,
+        importance=payload.importance,
+    )
+    if row is None:
+        raise HTTPException(status_code=404, detail="Event not found")
+    return row_to_event(row)
+
+
+@app.post("/events/{event_id}/promote")
+def promote_event(event_id: int):
+    row = pipeline.promote_event(event_id)
+    if row is None:
+        raise HTTPException(status_code=404, detail="Event not found")
+    return dict(row)
+
+
+@app.delete("/events/{event_id}")
+def delete_event(event_id: int):
+    if not pipeline.store.delete_event(event_id):
+        raise HTTPException(status_code=404, detail="Event not found")
+    return {"deleted": True}
 
 
 @app.get("/summaries")
@@ -77,7 +110,8 @@ def row_to_event(row) -> dict:
         "id": row["id"],
         "text": row["text"],
         "category": row["category"],
-        "importance": row["importance"],
+        "importance": row["current_importance"],
+        "review_status": row["review_status"],
         "source": row["source"],
         "created_at": row["created_at"],
     }

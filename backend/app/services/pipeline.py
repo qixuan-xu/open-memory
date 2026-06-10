@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, datetime
 
 from backend.app.core.schemas import EventCreate
 from backend.app.services.classifier import classify_text
@@ -39,6 +39,21 @@ class MemoryPipeline:
             )
         return row
 
+    def promote_event(self, event_id: int):
+        event = self.store.get_event(event_id)
+        if event is None:
+            return None
+        source_day = datetime.fromisoformat(event["created_at"]).date()
+        confidence = max(0.6, min(float(event["current_importance"]), 0.95))
+        memory = self.store.add_long_term_memory(
+            memory_type=event["category"],
+            text=event["text"],
+            confidence=confidence,
+            source_day=source_day,
+        )
+        self.store.update_event_review(event_id, review_status="kept", importance=confidence)
+        return memory
+
     def query(self, question: str, limit: int = 8) -> tuple[str, list, list]:
         events = rank_rows(question, self.store.recent_events(200), limit=limit)
         memories = rank_rows(
@@ -48,4 +63,3 @@ class MemoryPipeline:
             limit=limit,
         )
         return synthesize_answer(question, events, memories), events, memories
-

@@ -13,6 +13,7 @@ phone audio -> VAD segments -> transcript events -> timeline -> daily summaries
 
 - Stores timestamped memory events in SQLite.
 - Classifies events into projects, school, family, ideas, todos, decisions, and general life.
+- Routes new capture into a Memory Inbox so the user can keep, ignore, delete, or promote it.
 - Generates daily summaries from raw transcript text.
 - Promotes useful facts into a long-term memory layer.
 - Runs a self-reflection automation that produces:
@@ -92,13 +93,14 @@ curl -X POST http://127.0.0.1:8000/query \
 
 ## Roadmap
 
-The original product intent and early architecture notes live in [`docs/conversation-seed.md`](docs/conversation-seed.md).
+The original product intent and early architecture notes live in [`docs/conversation-seed.md`](docs/conversation-seed.md). The Chinese project memory and product context live in [`docs/project-context.md`](docs/project-context.md).
 
 1. iPhone App capture
    - background audio capture
    - on-device VAD
    - encrypted upload of speech segments
    - user-controlled pause and delete controls
+   - starter scaffold: [`ios/OpenMemory`](ios/OpenMemory)
 
 2. Transcription workers
    - Whisper local mode

@@ -18,6 +18,34 @@ function item(meta, text) {
   return el;
 }
 
+function eventItem(event, { reviewControls = false } = {}) {
+  const el = item(
+    `${event.category} / ${event.review_status} / importance ${event.importance}`,
+    event.text,
+  );
+  if (!reviewControls) return el;
+
+  const actions = document.createElement("div");
+  actions.className = "item-actions";
+  actions.append(
+    actionButton("Keep", () => reviewEvent(event.id, { review_status: "kept" })),
+    actionButton("Promote", () => promoteEvent(event.id)),
+    actionButton("Ignore", () => reviewEvent(event.id, { review_status: "ignored" }), "secondary"),
+    actionButton("Delete", () => deleteEvent(event.id), "danger"),
+  );
+  el.append(actions);
+  return el;
+}
+
+function actionButton(label, handler, variant = "") {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.textContent = label;
+  button.className = variant;
+  button.addEventListener("click", handler);
+  return button;
+}
+
 function escapeHtml(text) {
   return String(text).replace(/[&<>"']/g, (char) => ({
     "&": "&amp;",
@@ -29,14 +57,18 @@ function escapeHtml(text) {
 }
 
 async function refresh() {
-  const [events, summaries, memories] = await Promise.all([
+  const [inbox, events, summaries, memories] = await Promise.all([
+    request("/events/inbox?limit=20"),
     request("/events?limit=20"),
     request("/summaries?limit=3"),
     request("/memories?limit=20"),
   ]);
 
+  byId("inbox").replaceChildren(...inbox.map((event) =>
+    eventItem(event, { reviewControls: true })
+  ));
   byId("events").replaceChildren(...events.map((event) =>
-    item(`${event.category} / importance ${event.importance}`, event.text)
+    eventItem(event)
   ));
   byId("summaries").replaceChildren(...summaries.map((summary) =>
     item(summary.day, summary.summary)
@@ -44,6 +76,24 @@ async function refresh() {
   byId("memories").replaceChildren(...memories.map((memory) =>
     item(`${memory.memory_type} / confidence ${memory.confidence}`, memory.text)
   ));
+}
+
+async function reviewEvent(id, body) {
+  await request(`/events/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(body),
+  });
+  await refresh();
+}
+
+async function promoteEvent(id) {
+  await request(`/events/${id}/promote`, { method: "POST" });
+  await refresh();
+}
+
+async function deleteEvent(id) {
+  await request(`/events/${id}`, { method: "DELETE" });
+  await refresh();
 }
 
 byId("save").addEventListener("click", async () => {

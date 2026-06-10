@@ -16,6 +16,12 @@ CREATE TABLE IF NOT EXISTS events (
     text TEXT NOT NULL,
     category TEXT NOT NULL,
     importance REAL NOT NULL,
+    initial_importance REAL NOT NULL,
+    current_importance REAL NOT NULL,
+    importance_reason TEXT NOT NULL,
+    last_reassessed_at TEXT,
+    review_status TEXT NOT NULL DEFAULT 'inbox',
+    reviewed_at TEXT,
     source TEXT NOT NULL,
     tags TEXT NOT NULL,
     metadata TEXT NOT NULL,
@@ -70,6 +76,27 @@ class MemoryStore:
     def init(self) -> None:
         with self.connect() as conn:
             conn.executescript(SCHEMA)
+            self._migrate_events(conn)
+
+    def _migrate_events(self, conn: sqlite3.Connection) -> None:
+        columns = {row["name"] for row in conn.execute("PRAGMA table_info(events)")}
+        migrations = {
+            "initial_importance": "ALTER TABLE events ADD COLUMN initial_importance REAL",
+            "current_importance": "ALTER TABLE events ADD COLUMN current_importance REAL",
+            "importance_reason": "ALTER TABLE events ADD COLUMN importance_reason TEXT",
+            "last_reassessed_at": "ALTER TABLE events ADD COLUMN last_reassessed_at TEXT",
+            "review_status": "ALTER TABLE events ADD COLUMN review_status TEXT DEFAULT 'inbox'",
+            "reviewed_at": "ALTER TABLE events ADD COLUMN reviewed_at TEXT",
+        }
+        for column, statement in migrations.items():
+            if column not in columns:
+                conn.execute(statement)
+        conn.execute("UPDATE events SET initial_importance = importance WHERE initial_importance IS NULL")
+        conn.execute("UPDATE events SET current_importance = importance WHERE current_importance IS NULL")
+        conn.execute(
+            "UPDATE events SET importance_reason = 'Initial classifier estimate' WHERE importance_reason IS NULL"
+        )
+        conn.execute("UPDATE events SET review_status = 'inbox' WHERE review_status IS NULL")
 
     def add_event(
         self,
@@ -87,13 +114,19 @@ class MemoryStore:
             cursor = conn.execute(
                 """
                 INSERT INTO events
-                (text, category, importance, source, tags, metadata, started_at, ended_at, created_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                (
+                    text, category, importance, initial_importance, current_importance,
+                    importance_reason, source, tags, metadata, started_at, ended_at, created_at
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     text,
                     category,
                     importance,
+                    importance,
+                    importance,
+                    "Initial classifier estimate",
                     source,
                     json.dumps(tags, ensure_ascii=False),
                     json.dumps(metadata, ensure_ascii=False),
@@ -110,14 +143,78 @@ class MemoryStore:
         with self.connect() as conn:
             return list(
                 conn.execute(
-                    "SELECT * FROM events WHERE created_at BETWEEN ? AND ? ORDER BY created_at ASC",
+                    """
+                    SELECT * FROM events
+                    WHERE created_at BETWEEN ? AND ? AND review_status != 'ignored'
+                    ORDER BY created_at ASC
+                    """,
                     (start, end),
                 )
             )
 
     def recent_events(self, limit: int = 50) -> list[sqlite3.Row]:
         with self.connect() as conn:
-            return list(conn.execute("SELECT * FROM events ORDER BY created_at DESC LIMIT ?", (limit,)))
+            return list(
+                conn.execute(
+                    "SELECT * FROM events WHERE review_status != 'ignored' ORDER BY created_at DESC LIMIT ?",
+                    (limit,),
+                )
+            )
+
+    def list_inbox_events(self, limit: int = 50) -> list[sqlite3.Row]:
+        with self.connect() as conn:
+            return list(
+                conn.execute(
+                    "SELECT * FROM events WHERE review_status = 'inbox' ORDER BY importance DESC, created_at DESC LIMIT ?",
+                    (limit,),
+                )
+            )
+
+    def get_event(self, event_id: int) -> sqlite3.Row | None:
+        with self.connect() as conn:
+            return conn.execute("SELECT * FROM events WHERE id = ?", (event_id,)).fetchone()
+
+    def update_event_review(
+        self,
+        event_id: int,
+        review_status: str | None = None,
+        text: str | None = None,
+        importance: float | None = None,
+    ) -> sqlite3.Row | None:
+        existing = self.get_event(event_id)
+        if existing is None:
+            return None
+
+        next_status = review_status or existing["review_status"]
+        next_text = text or existing["text"]
+        next_importance = existing["current_importance"] if importance is None else importance
+        now = utc_now()
+        reviewed_at = now if review_status in {"kept", "ignored"} else existing["reviewed_at"]
+        with self.connect() as conn:
+            conn.execute(
+                """
+                UPDATE events
+                SET text = ?, importance = ?, current_importance = ?, review_status = ?,
+                    reviewed_at = ?, last_reassessed_at = ?, importance_reason = ?
+                WHERE id = ?
+                """,
+                (
+                    next_text,
+                    next_importance,
+                    next_importance,
+                    next_status,
+                    reviewed_at,
+                    now if importance is not None else existing["last_reassessed_at"],
+                    "User reassessed importance" if importance is not None else existing["importance_reason"],
+                    event_id,
+                ),
+            )
+            return conn.execute("SELECT * FROM events WHERE id = ?", (event_id,)).fetchone()
+
+    def delete_event(self, event_id: int) -> bool:
+        with self.connect() as conn:
+            cursor = conn.execute("DELETE FROM events WHERE id = ?", (event_id,))
+            return cursor.rowcount > 0
 
     def recent_daily_summaries(self, limit: int = 14) -> list[sqlite3.Row]:
         with self.connect() as conn:

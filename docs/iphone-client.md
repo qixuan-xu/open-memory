@@ -2,13 +2,32 @@
 
 The iPhone app is the main capture device.
 
-## First Version
+## v1 Product Shape
 
-- Manual recording button.
-- Local VAD before upload.
-- Upload transcript text to FastAPI.
-- Show recent timeline and daily summary.
-- Let user delete events.
+The first iPhone version should feel like an explicit Memory Session rather than hidden always-on listening.
+
+- Start and pause recording from a clear control.
+- Show a visible recording state whenever capture is active.
+- Keep raw audio local and temporary by default.
+- Run VAD before transcription or upload.
+- Upload transcript events to the FastAPI Memory Inbox.
+- Let the dashboard decide what is kept, ignored, deleted, or promoted to long-term memory.
+- Pause or warn on low battery, low storage, phone calls, and audio route interruptions.
+
+The starter SwiftUI scaffold lives in [`../ios/OpenMemory`](../ios/OpenMemory).
+
+## v1 Capture Flow
+
+```text
+Start Memory Session
+-> request microphone permission
+-> configure background-capable audio session
+-> capture audio buffers
+-> VAD removes silence
+-> WhisperKit or server worker transcribes speech
+-> POST /events
+-> Memory Inbox review
+```
 
 ## Second Version
 
@@ -45,4 +64,4 @@ Content-Type: application/json
 - Fast pause gesture.
 - Delete from timeline and long-term memory.
 - Export and wipe controls.
-
+- Explicit user review before low-confidence content becomes long-term memory.
