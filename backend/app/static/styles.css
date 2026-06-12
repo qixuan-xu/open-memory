@@ -120,7 +120,7 @@ button.danger:hover {
 .command, .ask {
   align-items: end;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(220px, 320px) auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: 10px;
 }
 

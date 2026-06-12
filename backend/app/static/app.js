@@ -18,8 +18,6 @@ const text = {
     longTermMemory: "Long-Term Memory",
     ask: "Ask",
     askPlaceholder: "Ask your memory...",
-    llm: "LLM",
-    llmPlaceholder: "none, ollama:qwen2.5, lmstudio:local-model, openai:gpt-4.1",
     askButton: "Ask",
     keep: "Keep",
     promote: "Promote",
@@ -43,8 +41,6 @@ const text = {
     longTermMemory: "长期记忆",
     ask: "提问",
     askPlaceholder: "向你的记忆提问...",
-    llm: "模型",
-    llmPlaceholder: "none、ollama:qwen2.5、lmstudio:local-model、openai:gpt-4.1",
     askButton: "提问",
     keep: "保留",
     promote: "提升为长期记忆",
@@ -203,14 +199,13 @@ byId("reflect").addEventListener("click", async () => {
 byId("ask").addEventListener("click", async () => {
   const question = byId("question").value.trim();
   if (!question) return;
-  const llm = byId("llm").value.trim();
   const askButton = byId("ask");
   askButton.disabled = true;
   byId("answer").textContent = t("thinking");
   try {
     const data = await request("/query", {
       method: "POST",
-      body: JSON.stringify(llm ? { question, llm } : { question }),
+      body: JSON.stringify({ question }),
     });
     byId("answer").textContent = data.answer;
   } catch (error) {

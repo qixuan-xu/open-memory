@@ -131,11 +131,9 @@ Start Open Memory with retrieval only:
 open-memory start
 ```
 
-Then open <http://127.0.0.1:8000/>. In the Ask panel, leave the LLM field empty or type:
+Then open <http://127.0.0.1:8000/>. The dashboard uses the LLM selected when the server was started. With the command above, no model is called.
 
-```text
-none
-```
+To change the dashboard model, stop the server with `Ctrl+C` and restart with a different `--llm` value.
 
 Use Ollama:
 
@@ -145,12 +143,6 @@ open-memory start --llm ollama:qwen2.5:7b
 ```
 
 If `ollama serve` says `address already in use`, Ollama is already running. Continue with `ollama pull ...` and `open-memory start ...`.
-
-In the dashboard LLM field, use:
-
-```text
-ollama:qwen2.5:7b
-```
 
 Use LM Studio:
 
@@ -163,16 +155,10 @@ Use LM Studio:
 open-memory start --llm lmstudio:local-model
 ```
 
-In the dashboard LLM field, use:
-
-```text
-lmstudio:local-model
-```
-
 For example:
 
-```text
-lmstudio:medius-erebus-magnum-14b
+```bash
+open-memory start --llm lmstudio:medius-erebus-magnum-14b
 ```
 
 The default LM Studio endpoint is:
@@ -186,12 +172,6 @@ Use OpenAI:
 ```bash
 export OPENAI_API_KEY="your-api-key"
 open-memory start --llm openai:gpt-4.1
-```
-
-In the dashboard LLM field, use:
-
-```text
-openai:gpt-4.1
 ```
 
 Answer citations use short source labels:
