@@ -7,6 +7,7 @@ from fastapi.staticfiles import StaticFiles
 from backend.app.core.schemas import EventCreate, EventRead, EventReviewUpdate, QueryRequest, QueryResponse
 from backend.app.services.pipeline import MemoryPipeline
 from backend.app.services.reflection import ReflectionEngine
+from open_memory.llms import LLMError
 
 
 app = FastAPI(title="Open Memory", version="0.1.0")
@@ -97,7 +98,10 @@ def reflect(day: date):
 
 @app.post("/query", response_model=QueryResponse)
 def query(payload: QueryRequest):
-    answer, events, memories = pipeline.query(payload.question, payload.limit, payload.llm)
+    try:
+        answer, events, memories = pipeline.query(payload.question, payload.limit, payload.llm)
+    except (LLMError, ValueError) as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
     return {
         "answer": answer,
         "supporting_events": [row_to_event(row) for row in events],

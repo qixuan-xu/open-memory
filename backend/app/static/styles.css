@@ -65,6 +65,15 @@ button:hover {
   background: #46bf69;
 }
 
+button:disabled {
+  cursor: wait;
+  opacity: 0.62;
+}
+
+button:disabled:hover {
+  background: #31a354;
+}
+
 button.secondary {
   background: #2f3b4a;
 }

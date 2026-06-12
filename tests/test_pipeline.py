@@ -74,3 +74,15 @@ def test_llm_config_and_prompt_contract(tmp_path):
     assert "Cite evidence" in prompt
     assert extract_openai_text({"output_text": "ok"}) == "ok"
     assert extract_chat_text({"choices": [{"message": {"content": "local ok"}}]}) == "local ok"
+
+
+def test_query_rejects_unknown_llm_provider(tmp_path):
+    store = MemoryStore(tmp_path / "memory.sqlite3")
+    pipeline = MemoryPipeline(store)
+
+    try:
+        pipeline.query("anything", llm_spec="missing:model")
+    except ValueError as exc:
+        assert "unsupported LLM provider" in str(exc)
+    else:
+        raise AssertionError("Expected invalid LLM provider to fail")

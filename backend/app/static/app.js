@@ -27,6 +27,8 @@ const text = {
     delete: "Delete",
     importance: "importance",
     confidence: "confidence",
+    thinking: "Thinking...",
+    askError: "Ask failed",
   },
   zh: {
     subtitle: "本地优先、由你审核的 AI 记忆控制台",
@@ -50,6 +52,8 @@ const text = {
     delete: "删除",
     importance: "重要性",
     confidence: "置信度",
+    thinking: "正在思考...",
+    askError: "提问失败",
   },
 };
 
@@ -76,7 +80,16 @@ async function request(path, options = {}) {
     headers: { "Content-Type": "application/json" },
     ...options,
   });
-  if (!res.ok) throw new Error(await res.text());
+  if (!res.ok) {
+    let message = await res.text();
+    try {
+      const parsed = JSON.parse(message);
+      message = parsed.detail || message;
+    } catch {
+      // Keep the plain response text.
+    }
+    throw new Error(message);
+  }
   return res.json();
 }
 
@@ -191,11 +204,20 @@ byId("ask").addEventListener("click", async () => {
   const question = byId("question").value.trim();
   if (!question) return;
   const llm = byId("llm").value.trim();
-  const data = await request("/query", {
-    method: "POST",
-    body: JSON.stringify(llm ? { question, llm } : { question }),
-  });
-  byId("answer").textContent = data.answer;
+  const askButton = byId("ask");
+  askButton.disabled = true;
+  byId("answer").textContent = t("thinking");
+  try {
+    const data = await request("/query", {
+      method: "POST",
+      body: JSON.stringify(llm ? { question, llm } : { question }),
+    });
+    byId("answer").textContent = data.answer;
+  } catch (error) {
+    byId("answer").textContent = `${t("askError")}: ${error.message}`;
+  } finally {
+    askButton.disabled = false;
+  }
 });
 
 byId("langEn").addEventListener("click", async () => {

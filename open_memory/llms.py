@@ -116,7 +116,8 @@ def post_json(url: str, payload: dict[str, Any], headers: dict[str, str] | None 
         method="POST",
     )
     try:
-        with urllib.request.urlopen(request, timeout=60) as response:
+        timeout = float(os.getenv("OPEN_MEMORY_LLM_TIMEOUT", "20"))
+        with urllib.request.urlopen(request, timeout=timeout) as response:
             body = response.read().decode("utf-8")
     except urllib.error.URLError as exc:
         raise LLMError(f"LLM request failed: {exc}") from exc
