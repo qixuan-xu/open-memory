@@ -10,48 +10,56 @@
   <header>
     <div>
       <h1>Open Memory</h1>
-      <p>Local-first AI memory cockpit with user-reviewed capture</p>
+      <p data-i18n="subtitle">Local-first AI memory cockpit with user-reviewed capture</p>
     </div>
     <div class="actions">
-      <button id="summarize">Summarize Today</button>
-      <button id="reflect">Reflect</button>
+      <div class="segmented" aria-label="Language">
+        <button id="langEn" type="button">EN</button>
+        <button id="langZh" type="button">中文</button>
+      </div>
+      <button id="summarize" data-i18n="summarize">Summarize Today</button>
+      <button id="reflect" data-i18n="reflect">Reflect</button>
     </div>
   </header>
 
   <main>
     <section class="command">
       <div>
-        <span class="eyebrow">Capture</span>
-        <textarea id="eventText" placeholder="Drop a memory, transcript, idea, decision, or todo..."></textarea>
+        <span class="eyebrow" data-i18n="capture">Capture</span>
+        <textarea id="eventText" data-i18n-placeholder="capturePlaceholder" placeholder="Drop a memory, transcript, idea, decision, or todo..."></textarea>
       </div>
-      <button id="save">Save Memory</button>
+      <button id="save" data-i18n="save">Save Memory</button>
     </section>
 
     <section class="grid">
       <article>
-        <h2>Memory Inbox</h2>
+        <h2 data-i18n="inbox">Memory Inbox</h2>
         <div id="inbox" class="list"></div>
       </article>
       <article>
-        <h2>Timeline</h2>
+        <h2 data-i18n="timeline">Timeline</h2>
         <div id="events" class="list"></div>
       </article>
       <article>
-        <h2>Daily Summary</h2>
+        <h2 data-i18n="dailySummary">Daily Summary</h2>
         <div id="summaries" class="list"></div>
       </article>
       <article>
-        <h2>Long-Term Memory</h2>
+        <h2 data-i18n="longTermMemory">Long-Term Memory</h2>
         <div id="memories" class="list"></div>
       </article>
     </section>
 
     <section class="ask">
       <div>
-        <span class="eyebrow">Ask</span>
-        <input id="question" placeholder="Ask your memory...">
+        <span class="eyebrow" data-i18n="ask">Ask</span>
+        <input id="question" data-i18n-placeholder="askPlaceholder" placeholder="Ask your memory...">
       </div>
-      <button id="ask">Ask</button>
+      <div>
+        <span class="eyebrow" data-i18n="llm">LLM</span>
+        <input id="llm" data-i18n-placeholder="llmPlaceholder" placeholder="none, ollama:qwen2.5, openai:gpt-4.1">
+      </div>
+      <button id="ask" data-i18n="askButton">Ask</button>
       <pre id="answer"></pre>
     </section>
   </main>

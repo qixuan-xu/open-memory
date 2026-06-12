@@ -82,14 +82,36 @@ button.danger:hover {
 }
 
 .actions {
+  align-items: center;
   display: flex;
   gap: 8px;
+}
+
+.segmented {
+  background: #111720;
+  border: 1px solid #27313d;
+  border-radius: 6px;
+  display: flex;
+  padding: 3px;
+}
+
+.segmented button {
+  background: transparent;
+  color: #a8b3bf;
+  min-height: 30px;
+  padding: 0 10px;
+}
+
+.segmented button:hover,
+.segmented button.active {
+  background: #2f3b4a;
+  color: #edf2f7;
 }
 
 .command, .ask {
   align-items: end;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 320px) auto;
   gap: 10px;
 }
 
@@ -188,5 +210,9 @@ pre {
 
   .command, .ask {
     grid-template-columns: 1fr;
+  }
+
+  .actions {
+    flex-wrap: wrap;
   }
 }

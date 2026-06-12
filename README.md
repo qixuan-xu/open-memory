@@ -120,6 +120,23 @@ Provider notes:
 - `ollama:<model>` calls a local Ollama server. Override the endpoint with `OLLAMA_URL`.
 - `openai:<model>` calls the OpenAI Responses API and requires `OPENAI_API_KEY`.
 
+For Ollama, start the local model first:
+
+```bash
+ollama serve
+ollama pull qwen2.5
+open-memory start --llm ollama:qwen2.5
+```
+
+For OpenAI:
+
+```bash
+export OPENAI_API_KEY="your-api-key"
+open-memory start --llm openai:gpt-4.1
+```
+
+The dashboard at <http://127.0.0.1:8000/> also has an LLM field in the Ask panel.
+
 ## Try It
 
 Seed a memory event:
