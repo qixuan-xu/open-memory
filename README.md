@@ -103,6 +103,7 @@ Choose an LLM at runtime when starting the API:
 
 ```bash
 open-memory start --llm ollama:qwen2.5
+open-memory start --llm lmstudio:local-model
 open-memory start --llm openai:gpt-4.1
 ```
 
@@ -111,6 +112,7 @@ Or ask from the CLI without starting the web server:
 ```bash
 open-memory ask "我之前对 ESP32 采集方案是什么看法？"
 open-memory ask "我之前对 ESP32 采集方案是什么看法？" --llm ollama:qwen2.5
+open-memory ask "我之前对 ESP32 采集方案是什么看法？" --llm lmstudio:local-model
 OPEN_MEMORY_LLM=openai:gpt-4.1 open-memory ask "What changed recently?"
 ```
 
@@ -118,6 +120,7 @@ Provider notes:
 
 - `none` is the default and never calls a model.
 - `ollama:<model>` calls a local Ollama server. Override the endpoint with `OLLAMA_URL`.
+- `lmstudio:<model>` calls LM Studio's OpenAI-compatible local server. Override the endpoint with `LM_STUDIO_URL`.
 - `openai:<model>` calls the OpenAI Responses API and requires `OPENAI_API_KEY`.
 
 For Ollama, start the local model first:
@@ -126,6 +129,18 @@ For Ollama, start the local model first:
 ollama serve
 ollama pull qwen2.5
 open-memory start --llm ollama:qwen2.5
+```
+
+For LM Studio, start the local server in LM Studio first, then use the model id shown there:
+
+```bash
+open-memory start --llm lmstudio:local-model
+```
+
+Default LM Studio endpoint:
+
+```text
+http://localhost:1234/v1/chat/completions
 ```
 
 For OpenAI:
@@ -169,7 +184,7 @@ Use a model for one API request:
 ```bash
 curl -X POST http://127.0.0.1:8000/query \
   -H "Content-Type: application/json" \
-  -d '{"question": "我之前对 ESP32 采集方案是什么看法？", "llm": "ollama:qwen2.5"}'
+  -d '{"question": "我之前对 ESP32 采集方案是什么看法？", "llm": "lmstudio:local-model"}'
 ```
 
 ## iOS Direction

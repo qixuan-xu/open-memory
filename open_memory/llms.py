@@ -11,6 +11,7 @@ from typing import Any, Protocol
 DEFAULT_LLM = "none"
 DEFAULT_OLLAMA_URL = "http://localhost:11434/api/generate"
 DEFAULT_OPENAI_URL = "https://api.openai.com/v1/responses"
+DEFAULT_LM_STUDIO_URL = "http://localhost:1234/v1/chat/completions"
 
 
 class LLMError(RuntimeError):
@@ -74,11 +75,34 @@ class OpenAIResponsesClient:
         return extract_openai_text(response)
 
 
+class OpenAICompatibleChatClient:
+    def __init__(self, model: str, url: str | None = None, api_key: str | None = None) -> None:
+        self.model = model
+        self.url = url or DEFAULT_LM_STUDIO_URL
+        self.api_key = api_key
+
+    def complete(self, prompt: str) -> str:
+        headers = {"Authorization": f"Bearer {self.api_key}"} if self.api_key else None
+        payload = {
+            "model": self.model,
+            "messages": [{"role": "user", "content": prompt}],
+            "temperature": 0.2,
+            "stream": False,
+        }
+        response = post_json(self.url, payload, headers=headers)
+        return extract_chat_text(response)
+
+
 def create_llm_client(config: LLMConfig) -> LLMClient:
     if config.provider == "none":
         return NoLLMClient()
     if config.provider == "ollama" and config.model:
         return OllamaClient(config.model)
+    if config.provider in {"lmstudio", "lm-studio"} and config.model:
+        return OpenAICompatibleChatClient(
+            config.model,
+            url=os.getenv("LM_STUDIO_URL") or DEFAULT_LM_STUDIO_URL,
+        )
     if config.provider == "openai" and config.model:
         return OpenAIResponsesClient(config.model)
     raise ValueError(f"unsupported LLM provider: {config.provider}")
@@ -123,3 +147,25 @@ def extract_openai_text(response: dict[str, Any]) -> str:
     if not text:
         raise LLMError("OpenAI response did not contain text")
     return text
+
+
+def extract_chat_text(response: dict[str, Any]) -> str:
+    choices = response.get("choices")
+    if not isinstance(choices, list) or not choices:
+        raise LLMError("Chat completion response did not contain choices")
+
+    first = choices[0]
+    if not isinstance(first, dict):
+        raise LLMError("Chat completion choice was not an object")
+
+    message = first.get("message")
+    if isinstance(message, dict) and isinstance(message.get("content"), str):
+        text = message["content"].strip()
+        if text:
+            return text
+
+    text = first.get("text")
+    if isinstance(text, str) and text.strip():
+        return text.strip()
+
+    raise LLMError("Chat completion response did not contain text")

@@ -23,4 +23,4 @@ def test_cli_exposes_runtime_llm_selection():
     )
 
     assert "--llm" in result.stdout
-    assert "openai:<model>" in result.stdout
+    assert "lmstudio:<model>" in result.stdout

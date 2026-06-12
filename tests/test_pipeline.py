@@ -5,7 +5,7 @@ from backend.app.services.answering import build_prompt
 from backend.app.services.pipeline import MemoryPipeline
 from backend.app.services.reflection import ReflectionEngine
 from backend.app.services.store import MemoryStore
-from open_memory.llms import LLMConfig, extract_openai_text
+from open_memory.llms import LLMConfig, create_llm_client, extract_chat_text, extract_openai_text
 
 
 def test_memory_pipeline_round_trip(tmp_path):
@@ -69,6 +69,8 @@ def test_llm_config_and_prompt_contract(tmp_path):
     prompt = build_prompt("运行时 LLM", events, memories)
 
     assert LLMConfig.from_spec("ollama:qwen2.5").provider == "ollama"
+    assert create_llm_client(LLMConfig.from_spec("lmstudio:local-model")).model == "local-model"
     assert "当前未启用 LLM" in answer
     assert "Cite evidence" in prompt
     assert extract_openai_text({"output_text": "ok"}) == "ok"
+    assert extract_chat_text({"choices": [{"message": {"content": "local ok"}}]}) == "local ok"

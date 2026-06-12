@@ -25,11 +25,11 @@ def main() -> None:
     setup.add_argument("--preset", choices=sorted(PRESETS), default="balanced")
 
     start = sub.add_parser("start", help="Start the local Open Memory server.")
-    start.add_argument("--llm", default=None, help="LLM backend: none, openai:<model>, or ollama:<model>.")
+    start.add_argument("--llm", default=None, help="LLM backend: none, ollama:<model>, lmstudio:<model>, or openai:<model>.")
 
     ask = sub.add_parser("ask", help="Ask a question using stored memories.")
     ask.add_argument("question")
-    ask.add_argument("--llm", default=None, help="LLM backend: none, openai:<model>, or ollama:<model>.")
+    ask.add_argument("--llm", default=None, help="LLM backend: none, ollama:<model>, lmstudio:<model>, or openai:<model>.")
     ask.add_argument("--limit", type=int, default=8)
 
     models = sub.add_parser("models", help="Manage optional local models.")
