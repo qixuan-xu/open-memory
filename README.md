@@ -123,34 +123,83 @@ Provider notes:
 - `lmstudio:<model>` calls LM Studio's OpenAI-compatible local server. Override the endpoint with `LM_STUDIO_URL`.
 - `openai:<model>` calls the OpenAI Responses API and requires `OPENAI_API_KEY`.
 
-For Ollama, start the local model first:
+### Local LLM Setup
+
+Start Open Memory with retrieval only:
 
 ```bash
-ollama serve
-ollama pull qwen2.5
-open-memory start --llm ollama:qwen2.5
+open-memory start
 ```
 
-For LM Studio, start the local server in LM Studio first, then use the model id shown there:
+Then open <http://127.0.0.1:8000/>. In the Ask panel, leave the LLM field empty or type:
+
+```text
+none
+```
+
+Use Ollama:
+
+```bash
+ollama pull qwen2.5:7b
+open-memory start --llm ollama:qwen2.5:7b
+```
+
+If `ollama serve` says `address already in use`, Ollama is already running. Continue with `ollama pull ...` and `open-memory start ...`.
+
+In the dashboard LLM field, use:
+
+```text
+ollama:qwen2.5:7b
+```
+
+Use LM Studio:
+
+1. Open LM Studio.
+2. Load a model.
+3. Start the Local Server.
+4. Use the model id shown by LM Studio.
 
 ```bash
 open-memory start --llm lmstudio:local-model
 ```
 
-Default LM Studio endpoint:
+In the dashboard LLM field, use:
+
+```text
+lmstudio:local-model
+```
+
+For example:
+
+```text
+lmstudio:medius-erebus-magnum-14b
+```
+
+The default LM Studio endpoint is:
 
 ```text
 http://localhost:1234/v1/chat/completions
 ```
 
-For OpenAI:
+Use OpenAI:
 
 ```bash
 export OPENAI_API_KEY="your-api-key"
 open-memory start --llm openai:gpt-4.1
 ```
 
-The dashboard at <http://127.0.0.1:8000/> also has an LLM field in the Ask panel.
+In the dashboard LLM field, use:
+
+```text
+openai:gpt-4.1
+```
+
+Answer citations use short source labels:
+
+- `[E1]` means Event 1, the first matching timeline event.
+- `[M1]` means Memory 1, the first matching long-term memory.
+
+These markers show which stored evidence the answer used.
 
 ## Try It
 
