@@ -21,7 +21,7 @@ flowchart LR
     A["iPhone Capture"] --> B["VAD<br/>filter silence"]
     B --> C["Whisper / WhisperKit<br/>transcription"]
     C --> D["Transcript Events<br/>SQLite timeline"]
-    D --> E["Memory Inbox<br/>keep / ignore / delete / promote"]
+    D --> E["Time-aware Triage<br/>LLM or rules judge importance"]
     E --> F["Daily Summary"]
     F --> G["Long-Term Memory"]
     G --> H["Reflection Loop"]
@@ -32,7 +32,7 @@ flowchart LR
 Open Memory uses layered memory instead of a giant context dump:
 
 ```text
-capture -> transcript events -> memory inbox -> daily summary
+capture -> transcript events -> time-aware triage -> daily summary
         -> long-term memory -> reflection -> retrieval QA
 ```
 
@@ -41,8 +41,8 @@ capture -> transcript events -> memory inbox -> daily summary
 - FastAPI backend.
 - SQLite memory store.
 - Timestamped text event ingestion.
-- Rule-based category and importance scoring.
-- Memory Inbox review flow: keep, ignore, delete, or promote.
+- Time-aware category and importance scoring with LLM-ready ingest prompts.
+- Automatic triage flow: keep, archive, or remember long term without blocking dialogs.
 - Daily summaries.
 - Long-term memory candidates.
 - Self-reflection notes.
@@ -59,11 +59,19 @@ This MVP does not save raw audio by default. It assumes the iPhone app or a reco
 
 ```text
 Whisper / WhisperKit       speech to text
-Rules / small model        category, tags, project detection, initial importance
+Rules / small model        fallback category, tags, project detection, initial importance
 Embedding model            semantic coordinates for similar-memory search
 Qdrant / Chroma            vector database
-Large model                summary, compression, reflection, reasoning, QA
+Large model                ingest triage, summary, compression, reflection, reasoning, QA
 ```
+
+When an event is created, Open Memory passes time context into the ingest assessment:
+
+```text
+assessed_at + occurred_at + source + metadata + text
+```
+
+If `OPEN_MEMORY_INGEST_LLM` or `OPEN_MEMORY_LLM` is configured, the model can return category, tags, importance, reason, and whether the item should be kept, archived, or left for review. If no model is configured, local rules do the same job as a fallback.
 
 Importance is not a one-shot decision. Events start with `initial_importance`, then future versions can update `current_importance`, `importance_reason`, and `last_reassessed_at` as projects repeat, decisions change, or the user corrects the system.
 
@@ -122,6 +130,7 @@ Provider notes:
 - `ollama:<model>` calls a local Ollama server. Override the endpoint with `OLLAMA_URL`.
 - `lmstudio:<model>` calls LM Studio's OpenAI-compatible local server. Override the endpoint with `LM_STUDIO_URL`.
 - `openai:<model>` calls the OpenAI Responses API and requires `OPENAI_API_KEY`.
+- `OPEN_MEMORY_INGEST_LLM` can use a different model just for event importance triage.
 
 ### Local LLM Setup
 

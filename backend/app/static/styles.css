@@ -185,6 +185,13 @@ article, .ask, .command {
   margin-bottom: 6px;
 }
 
+.reason {
+  color: #95a2b3;
+  font-size: 12px;
+  line-height: 1.4;
+  margin-top: 8px;
+}
+
 pre {
   background: #111720;
   border: 1px solid #27313d;

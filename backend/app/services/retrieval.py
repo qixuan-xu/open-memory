@@ -37,7 +37,8 @@ def synthesize_answer(question: str, events: list[sqlite3.Row], memories: list[s
     if events:
         lines.append("原始时间线里相关片段是：")
         for event in events[:4]:
-            lines.append(f"- {event['created_at']} [{event['category']}]: {event['text']}")
+            occurred_at = event["started_at"] or event["created_at"]
+            lines.append(f"- {occurred_at} [{event['category']} / {event['importance_reason']}]: {event['text']}")
 
     lines.append("")
     lines.append("这是基于检索结果的初步回答；接入 LLM 后，这一层会改成带引用的自然语言推理。")
@@ -48,4 +49,3 @@ def tokenize(text: str) -> set[str]:
     english = re.findall(r"[a-zA-Z0-9_]+", text.lower())
     chinese = [char for char in text if "\u4e00" <= char <= "\u9fff"]
     return set(english + chinese)
-

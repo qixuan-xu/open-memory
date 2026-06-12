@@ -15,6 +15,7 @@ def build_prompt(question: str, events: list[sqlite3.Row], memories: list[sqlite
     evidence = build_evidence(events, memories)
     return (
         "You answer using only the provided Open Memory evidence.\n"
+        "Every event includes time context. Use occurred_at/created_at when judging recency, plans, and importance.\n"
         "If evidence is weak or missing, say so plainly.\n"
         "Cite evidence with bracket numbers like [M1] or [E1].\n\n"
         f"Question:\n{question}\n\n"
@@ -34,7 +35,8 @@ def build_evidence(events: list[sqlite3.Row], memories: list[sqlite3.Row]) -> st
         lines.append(
             f"[E{index}] {event['text']} "
             f"(category={event['category']}, importance={event['current_importance']}, "
-            f"created_at={event['created_at']})"
+            f"reason={event['importance_reason']}, "
+            f"occurred_at={event['started_at'] or event['created_at']}, created_at={event['created_at']})"
         )
     return "\n".join(lines) if lines else "No relevant memory evidence was found."
 

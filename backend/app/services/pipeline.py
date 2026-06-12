@@ -3,8 +3,8 @@ from __future__ import annotations
 from datetime import date, datetime
 
 from backend.app.core.schemas import EventCreate
-from backend.app.services.classifier import classify_text
 from backend.app.services.answering import answer_with_llm
+from backend.app.services.ingest_assessment import assess_event
 from backend.app.services.retrieval import rank_rows
 from backend.app.services.store import MemoryStore
 from backend.app.services.summarizer import build_daily_summary, extract_long_term_candidates
@@ -16,14 +16,22 @@ class MemoryPipeline:
         self.store = store or MemoryStore()
 
     def ingest_event(self, payload: EventCreate):
-        category, importance, tags = classify_text(payload.text)
+        assessment = assess_event(payload)
+        metadata = {
+            **payload.metadata,
+            "captured_at": assessment.assessed_at.isoformat(),
+            "assessed_at": assessment.assessed_at.isoformat(),
+            "assessed_by": assessment.assessed_by,
+        }
         return self.store.add_event(
             text=payload.text,
-            category=category.value,
-            importance=importance,
+            category=assessment.category.value,
+            importance=assessment.importance,
             source=payload.source,
-            tags=tags,
-            metadata=payload.metadata,
+            tags=assessment.tags,
+            metadata=metadata,
+            importance_reason=assessment.importance_reason,
+            review_status=assessment.review_status,
             started_at=payload.started_at,
             ended_at=payload.ended_at,
         )

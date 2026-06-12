@@ -19,14 +19,17 @@ def build_daily_summary(day: date, events: list[sqlite3.Row]) -> tuple[str, dict
 
     for category, items in sorted(by_category.items()):
         lines.append(f"## {category}")
-        for event in sorted(items, key=lambda row: row["importance"], reverse=True)[:5]:
-            lines.append(f"- {compress_sentence(event['text'])}")
+        for event in sorted(items, key=lambda row: row["current_importance"], reverse=True)[:5]:
+            lines.append(f"- {event_time(event)}: {compress_sentence(event['text'])}")
         lines.append("")
 
-    key_events = sorted(events, key=lambda row: row["importance"], reverse=True)[:5]
+    key_events = sorted(events, key=lambda row: row["current_importance"], reverse=True)[:5]
     lines.append("## Signals")
     for event in key_events:
-        lines.append(f"- importance {event['importance']:.2f}: {compress_sentence(event['text'])}")
+        lines.append(
+            f"- {event_time(event)} / importance {event['current_importance']:.2f}: "
+            f"{compress_sentence(event['text'])}"
+        )
 
     return "\n".join(lines).strip(), category_counts
 
@@ -36,7 +39,7 @@ def extract_long_term_candidates(day: date, events: list[sqlite3.Row]) -> list[d
     for event in events:
         text = event["text"]
         category = event["category"]
-        importance = float(event["importance"])
+        importance = float(event["current_importance"])
         lowered = text.lower()
 
         if importance < 0.5:
@@ -78,3 +81,6 @@ def compress_sentence(text: str, max_chars: int = 150) -> str:
 def normalize_memory_text(text: str, day: date) -> str:
     return f"{day.isoformat()}: {compress_sentence(text, 220)}"
 
+
+def event_time(event: sqlite3.Row) -> str:
+    return event["started_at"] or event["created_at"]

@@ -23,7 +23,7 @@ class ReflectionEngine:
 
         category_counts = Counter(event["category"] for event in events)
         top_categories = ", ".join(f"{name}={count}" for name, count in category_counts.most_common())
-        important = [event for event in events if float(event["importance"]) >= 0.6]
+        important = [event for event in events if float(event["current_importance"]) >= 0.6]
         projects = [event for event in events if event["category"] == "project"]
         decisions = [event for event in events if event["category"] == "decision"]
 
@@ -55,4 +55,3 @@ class ReflectionEngine:
         lines.append("- 用向量检索替换当前 lexical retrieval，并保留可解释引用。")
 
         return "\n".join(lines)
-

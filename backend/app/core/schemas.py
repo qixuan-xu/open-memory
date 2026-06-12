@@ -17,8 +17,11 @@ class EventRead(BaseModel):
     text: str
     category: str
     importance: float
+    importance_reason: str
     review_status: str
     source: str
+    started_at: datetime | None = None
+    ended_at: datetime | None = None
     created_at: datetime
 
 

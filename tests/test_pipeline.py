@@ -1,7 +1,8 @@
-from datetime import date
+from datetime import date, datetime, timezone
 
 from backend.app.core.schemas import EventCreate
 from backend.app.services.answering import build_prompt
+from backend.app.services.ingest_assessment import assess_event, build_ingest_prompt, parse_llm_assessment
 from backend.app.services.pipeline import MemoryPipeline
 from backend.app.services.reflection import ReflectionEngine
 from backend.app.services.store import MemoryStore
@@ -21,6 +22,9 @@ def test_memory_pipeline_round_trip(tmp_path):
 
     assert event["category"] in {"project", "decision"}
     assert event["importance"] >= 0.5
+    assert event["importance_reason"]
+    assert "captured_at" in event["metadata"]
+    assert event["metadata"]
 
     summary = pipeline.summarize_day(date.today())
     assert "Open Memory" in summary["summary"]
@@ -45,8 +49,7 @@ def test_memory_inbox_review_and_promotion(tmp_path):
         )
     )
 
-    assert event["review_status"] == "inbox"
-    assert store.list_inbox_events()
+    assert event["review_status"] in {"kept", "inbox"}
 
     reviewed = store.update_event_review(event["id"], review_status="ignored")
     assert reviewed["review_status"] == "ignored"
@@ -72,8 +75,43 @@ def test_llm_config_and_prompt_contract(tmp_path):
     assert create_llm_client(LLMConfig.from_spec("lmstudio:local-model")).model == "local-model"
     assert "当前未启用 LLM" in answer
     assert "Cite evidence" in prompt
+    assert "occurred_at" in prompt
+    assert "reason=" in prompt
     assert extract_openai_text({"output_text": "ok"}) == "ok"
     assert extract_chat_text({"choices": [{"message": {"content": "local ok"}}]}) == "local ok"
+
+
+def test_ingest_assessment_uses_time_context():
+    payload = EventCreate(
+        text="明天必须继续做 Open Memory 的 iPhone VAD。",
+        source="test",
+        started_at="2026-06-12T08:30:00+08:00",
+    )
+    assessment = assess_event(payload, llm_spec="none")
+    prompt = build_ingest_prompt(payload, assessment.assessed_at)
+
+    assert assessment.importance_reason
+    assert assessment.review_status in {"kept", "inbox", "ignored"}
+    assert "occurred_at: 2026-06-12T08:30:00+08:00" in prompt
+
+
+def test_parse_llm_ingest_assessment():
+    assessment = parse_llm_assessment(
+        """
+        {
+          "category": "project",
+          "importance": 0.86,
+          "tags": ["Open Memory", "iPhone"],
+          "importance_reason": "Time-sensitive project follow-up.",
+          "review_status": "kept"
+        }
+        """,
+        assessed_at=datetime.now(timezone.utc),
+    )
+
+    assert assessment.category == "project"
+    assert assessment.importance == 0.86
+    assert assessment.review_status == "kept"
 
 
 def test_query_rejects_unknown_llm_provider(tmp_path):

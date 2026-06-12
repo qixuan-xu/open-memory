@@ -26,7 +26,7 @@ Qdrant / Chroma：存向量，支持语义检索
 大模型：负责每日总结、长期记忆压缩、复杂分析、自我反思和问答
 ```
 
-重要性不应该一次决定。每条记录刚进入系统时可以有 `initial_importance`，之后根据后续对话、重复提及、项目进展、用户修正和每日总结重新判断，形成 `current_importance`、`importance_reason` 和 `last_reassessed_at`。例如一条原本普通的 ESP32 记录，如果后续多次被提到，就应该被升级为重要项目记忆。
+重要性不应该一次决定。每条记录刚进入系统时应该把 `assessed_at`、`occurred_at`、来源和文本一起交给 LLM 或规则判断，先形成 `initial_importance`、`current_importance`、`importance_reason` 和初始分流状态。之后再根据后续对话、重复提及、项目进展、用户修正和每日总结重新判断，更新 `current_importance`、`importance_reason` 和 `last_reassessed_at`。例如一条原本普通的 ESP32 记录，如果后续多次被提到，就应该被升级为重要项目记忆。
 
 Embedding 可以理解成“语义坐标”。普通搜索只能找相同关键词，embedding 可以找到意思相近的内容。例如用户问“我什么时候说过手机端过滤语音”，系统应该能找到“VAD 要先在 iPhone 上做，避免上传无意义音频”。
 

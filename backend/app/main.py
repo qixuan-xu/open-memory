@@ -115,7 +115,10 @@ def row_to_event(row) -> dict:
         "text": row["text"],
         "category": row["category"],
         "importance": row["current_importance"],
+        "importance_reason": row["importance_reason"],
         "review_status": row["review_status"],
         "source": row["source"],
+        "started_at": row["started_at"],
+        "ended_at": row["ended_at"],
         "created_at": row["created_at"],
     }

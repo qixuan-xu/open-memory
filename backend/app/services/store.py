@@ -106,6 +106,8 @@ class MemoryStore:
         source: str,
         tags: list[str],
         metadata: dict,
+        importance_reason: str,
+        review_status: str,
         started_at: datetime | None,
         ended_at: datetime | None,
     ) -> sqlite3.Row:
@@ -116,9 +118,9 @@ class MemoryStore:
                 INSERT INTO events
                 (
                     text, category, importance, initial_importance, current_importance,
-                    importance_reason, source, tags, metadata, started_at, ended_at, created_at
+                    importance_reason, review_status, source, tags, metadata, started_at, ended_at, created_at
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     text,
@@ -126,7 +128,8 @@ class MemoryStore:
                     importance,
                     importance,
                     importance,
-                    "Initial classifier estimate",
+                    importance_reason,
+                    review_status,
                     source,
                     json.dumps(tags, ensure_ascii=False),
                     json.dumps(metadata, ensure_ascii=False),
@@ -165,7 +168,12 @@ class MemoryStore:
         with self.connect() as conn:
             return list(
                 conn.execute(
-                    "SELECT * FROM events WHERE review_status = 'inbox' ORDER BY importance DESC, created_at DESC LIMIT ?",
+                    """
+                    SELECT * FROM events
+                    WHERE review_status = 'inbox'
+                    ORDER BY current_importance DESC, created_at DESC
+                    LIMIT ?
+                    """,
                     (limit,),
                 )
             )

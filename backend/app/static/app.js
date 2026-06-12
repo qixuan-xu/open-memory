@@ -6,22 +6,22 @@ let language = savedLanguage === "zh" ? "zh" : "en";
 
 const text = {
   en: {
-    subtitle: "Local-first AI memory cockpit with user-reviewed capture",
+    subtitle: "Local-first AI memory cockpit with automatic time-aware triage",
     summarize: "Summarize Today",
     reflect: "Reflect",
     capture: "Capture",
     capturePlaceholder: "Drop a memory, transcript, idea, decision, or todo...",
     save: "Save Memory",
-    inbox: "Memory Inbox",
+    inbox: "Auto Triage",
     timeline: "Timeline",
     dailySummary: "Daily Summary",
     longTermMemory: "Long-Term Memory",
     ask: "Ask",
     askPlaceholder: "Ask your memory...",
     askButton: "Ask",
-    keep: "Keep",
-    promote: "Promote",
-    ignore: "Ignore",
+    keep: "Keep in timeline",
+    promote: "Remember long term",
+    ignore: "Archive",
     delete: "Delete",
     importance: "importance",
     confidence: "confidence",
@@ -29,22 +29,22 @@ const text = {
     askError: "Ask failed",
   },
   zh: {
-    subtitle: "本地优先、由你审核的 AI 记忆控制台",
+    subtitle: "本地优先、自动结合时间判断重要性的 AI 记忆控制台",
     summarize: "总结今天",
     reflect: "反思",
     capture: "捕捉",
     capturePlaceholder: "写下一条记忆、转录、想法、决定或待办...",
     save: "保存记忆",
-    inbox: "记忆收件箱",
+    inbox: "自动分流",
     timeline: "时间线",
     dailySummary: "每日总结",
     longTermMemory: "长期记忆",
     ask: "提问",
     askPlaceholder: "向你的记忆提问...",
     askButton: "提问",
-    keep: "保留",
-    promote: "提升为长期记忆",
-    ignore: "忽略",
+    keep: "留在时间线",
+    promote: "记为长期记忆",
+    ignore: "归档",
     delete: "删除",
     importance: "重要性",
     confidence: "置信度",
@@ -97,10 +97,15 @@ function item(meta, text) {
 }
 
 function eventItem(event, { reviewControls = false } = {}) {
+  const occurredAt = event.started_at || event.created_at;
   const el = item(
-    `${event.category} / ${event.review_status} / ${t("importance")} ${event.importance}`,
+    `${occurredAt} / ${event.category} / ${event.review_status} / ${t("importance")} ${event.importance}`,
     event.text,
   );
+  const reason = document.createElement("div");
+  reason.className = "reason";
+  reason.textContent = event.importance_reason;
+  el.append(reason);
   if (!reviewControls) return el;
 
   const actions = document.createElement("div");
@@ -179,7 +184,7 @@ byId("save").addEventListener("click", async () => {
   if (!text) return;
   await request("/events", {
     method: "POST",
-    body: JSON.stringify({ text, source: "dashboard" }),
+    body: JSON.stringify({ text, source: "dashboard", started_at: new Date().toISOString() }),
   });
   byId("eventText").value = "";
   await refresh();
