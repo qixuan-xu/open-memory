@@ -5,7 +5,7 @@ from backend.app.services.answering import build_prompt
 from backend.app.services.pipeline import MemoryPipeline
 from backend.app.services.reflection import ReflectionEngine
 from backend.app.services.store import MemoryStore
-from open_memory.llms import LLMConfig, create_llm_client, extract_chat_text, extract_openai_text
+from open_memory.llms import LLMConfig, LLMError, create_llm_client, extract_chat_text, extract_openai_text, post_json
 
 
 def test_memory_pipeline_round_trip(tmp_path):
@@ -86,3 +86,24 @@ def test_query_rejects_unknown_llm_provider(tmp_path):
         assert "unsupported LLM provider" in str(exc)
     else:
         raise AssertionError("Expected invalid LLM provider to fail")
+
+
+def test_lm_provider_error_is_reported(monkeypatch):
+    class FakeResponse:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *exc_info):
+            return None
+
+        def read(self):
+            return b'{"error":"Compute error."}'
+
+    monkeypatch.setattr("urllib.request.urlopen", lambda *args, **kwargs: FakeResponse())
+
+    try:
+        post_json("http://localhost:1234/v1/chat/completions", {})
+    except LLMError as exc:
+        assert "Compute error" in str(exc)
+    else:
+        raise AssertionError("Expected provider error to fail")

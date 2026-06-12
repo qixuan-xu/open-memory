@@ -128,6 +128,13 @@ def post_json(url: str, payload: dict[str, Any], headers: dict[str, str] | None 
         raise LLMError("LLM response was not valid JSON") from exc
     if not isinstance(decoded, dict):
         raise LLMError("LLM response was not a JSON object")
+    provider_error = decoded.get("error")
+    if provider_error:
+        if isinstance(provider_error, dict):
+            message = provider_error.get("message") or json.dumps(provider_error, ensure_ascii=False)
+        else:
+            message = str(provider_error)
+        raise LLMError(f"LLM provider error: {message}")
     return decoded
 
 
