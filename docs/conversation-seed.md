@@ -161,10 +161,10 @@ The project should support a vibe coding workflow:
 - commit author should remain the user's Git identity
 - GitHub Desktop can be used as a visual review surface
 
-Default local path:
+Example local path:
 
 ```text
-/Users/qixuanxu/Desktop/Projects/open-memory
+~/Desktop/projects/open-memory
 ```
 
 GitHub repository:
@@ -183,4 +183,3 @@ https://github.com/qixuan-xu/open-memory
 6. Add Whisper or faster-whisper transcription worker.
 7. Add iPhone capture app with visible recording controls.
 8. Add memory correction, deletion, and privacy rules.
-

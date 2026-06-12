@@ -97,7 +97,7 @@ def reflect(day: date):
 
 @app.post("/query", response_model=QueryResponse)
 def query(payload: QueryRequest):
-    answer, events, memories = pipeline.query(payload.question, payload.limit)
+    answer, events, memories = pipeline.query(payload.question, payload.limit, payload.llm)
     return {
         "answer": answer,
         "supporting_events": [row_to_event(row) for row in events],

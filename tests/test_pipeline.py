@@ -1,9 +1,11 @@
 from datetime import date
 
 from backend.app.core.schemas import EventCreate
+from backend.app.services.answering import build_prompt
 from backend.app.services.pipeline import MemoryPipeline
 from backend.app.services.reflection import ReflectionEngine
 from backend.app.services.store import MemoryStore
+from open_memory.llms import LLMConfig, extract_openai_text
 
 
 def test_memory_pipeline_round_trip(tmp_path):
@@ -56,3 +58,17 @@ def test_memory_inbox_review_and_promotion(tmp_path):
     memory = pipeline.promote_event(event["id"])
     assert memory["text"] == kept["text"]
     assert memory["confidence"] == 0.9
+
+
+def test_llm_config_and_prompt_contract(tmp_path):
+    store = MemoryStore(tmp_path / "memory.sqlite3")
+    pipeline = MemoryPipeline(store)
+    pipeline.ingest_event(EventCreate(text="Open Memory 支持运行时选择 LLM。", source="test"))
+
+    answer, events, memories = pipeline.query("运行时 LLM", llm_spec="none")
+    prompt = build_prompt("运行时 LLM", events, memories)
+
+    assert LLMConfig.from_spec("ollama:qwen2.5").provider == "ollama"
+    assert "当前未启用 LLM" in answer
+    assert "Cite evidence" in prompt
+    assert extract_openai_text({"output_text": "ok"}) == "ok"

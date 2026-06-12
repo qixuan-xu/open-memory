@@ -4,9 +4,11 @@ from datetime import date, datetime
 
 from backend.app.core.schemas import EventCreate
 from backend.app.services.classifier import classify_text
-from backend.app.services.retrieval import rank_rows, synthesize_answer
+from backend.app.services.answering import answer_with_llm
+from backend.app.services.retrieval import rank_rows
 from backend.app.services.store import MemoryStore
 from backend.app.services.summarizer import build_daily_summary, extract_long_term_candidates
+from open_memory.llms import LLMConfig, create_llm_client
 
 
 class MemoryPipeline:
@@ -54,7 +56,7 @@ class MemoryPipeline:
         self.store.update_event_review(event_id, review_status="kept", importance=confidence)
         return memory
 
-    def query(self, question: str, limit: int = 8) -> tuple[str, list, list]:
+    def query(self, question: str, limit: int = 8, llm_spec: str | None = None) -> tuple[str, list, list]:
         events = rank_rows(question, self.store.recent_events(200), limit=limit)
         memories = rank_rows(
             question,
@@ -62,4 +64,5 @@ class MemoryPipeline:
             text_field="text",
             limit=limit,
         )
-        return synthesize_answer(question, events, memories), events, memories
+        llm = create_llm_client(LLMConfig.from_spec(llm_spec))
+        return answer_with_llm(question, events, memories, llm), events, memories

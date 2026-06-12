@@ -4,8 +4,11 @@ import argparse
 import json
 import os
 import subprocess
+import sys
 from pathlib import Path
 
+from backend.app.services.pipeline import MemoryPipeline
+from backend.app.services.store import MemoryStore
 from open_memory.models import MODEL_OPTIONS, PRESETS
 
 
@@ -21,7 +24,13 @@ def main() -> None:
     setup = sub.add_parser("setup", help="Create local config and choose a model preset.")
     setup.add_argument("--preset", choices=sorted(PRESETS), default="balanced")
 
-    sub.add_parser("start", help="Start the local Open Memory server.")
+    start = sub.add_parser("start", help="Start the local Open Memory server.")
+    start.add_argument("--llm", default=None, help="LLM backend: none, openai:<model>, or ollama:<model>.")
+
+    ask = sub.add_parser("ask", help="Ask a question using stored memories.")
+    ask.add_argument("question")
+    ask.add_argument("--llm", default=None, help="LLM backend: none, openai:<model>, or ollama:<model>.")
+    ask.add_argument("--limit", type=int, default=8)
 
     models = sub.add_parser("models", help="Manage optional local models.")
     model_sub = models.add_subparsers(dest="models_command")
@@ -33,7 +42,9 @@ def main() -> None:
     if args.command == "setup":
         setup_config(args.preset)
     elif args.command == "start":
-        start_server()
+        start_server(args.llm)
+    elif args.command == "ask":
+        return ask_question(args.question, args.limit, args.llm)
     elif args.command == "models" and args.models_command == "list":
         list_models()
     elif args.command == "models" and args.models_command == "install":
@@ -75,11 +86,38 @@ def install_model(model: str) -> None:
     print("Model weights are intentionally not committed to Git.")
 
 
-def start_server() -> None:
+def ask_question(question: str, limit: int, llm: str | None) -> None:
+    try:
+        pipeline = MemoryPipeline(MemoryStore(configured_database_path()))
+        answer, events, memories = pipeline.query(question, limit, llm)
+    except Exception as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        raise SystemExit(2) from exc
+
+    print(answer)
+    if events or memories:
+        print()
+        print("Citations:")
+        for index, memory in enumerate(memories, start=1):
+            print(f"[M{index}] long_term_memories:{memory['id']} source_day={memory['source_day']}")
+        for index, event in enumerate(events, start=1):
+            print(f"[E{index}] events:{event['id']} created_at={event['created_at']}")
+
+
+def configured_database_path() -> Path:
+    if CONFIG_PATH.exists():
+        config = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
+        return Path(config["database"])
+    return Path(os.getenv("ALLEN_MEMORY_DB", "./allen_memory.sqlite3"))
+
+
+def start_server(llm: str | None = None) -> None:
     env = os.environ.copy()
     if CONFIG_PATH.exists():
         config = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
         env["ALLEN_MEMORY_DB"] = config["database"]
+    if llm:
+        env["OPEN_MEMORY_LLM"] = llm
     cmd = ["uvicorn", "backend.app.main:app", "--host", "127.0.0.1", "--port", "8000"]
     subprocess.run(cmd, check=True, env=env)
 

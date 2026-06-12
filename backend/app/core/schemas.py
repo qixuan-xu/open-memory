@@ -31,6 +31,7 @@ class EventReviewUpdate(BaseModel):
 class QueryRequest(BaseModel):
     question: str = Field(min_length=1)
     limit: int = Field(default=8, ge=1, le=30)
+    llm: str | None = None
 
 
 class QueryResponse(BaseModel):
