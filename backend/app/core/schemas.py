@@ -10,6 +10,7 @@ class EventCreate(BaseModel):
     started_at: datetime | None = None
     ended_at: datetime | None = None
     metadata: dict = Field(default_factory=dict)
+    llm: str | None = None
 
 
 class EventRead(BaseModel):
@@ -20,6 +21,7 @@ class EventRead(BaseModel):
     importance_reason: str
     review_status: str
     source: str
+    assessed_by: str | None = None
     started_at: datetime | None = None
     ended_at: datetime | None = None
     created_at: datetime

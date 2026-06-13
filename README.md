@@ -71,7 +71,7 @@ When an event is created, Open Memory passes time context into the ingest assess
 assessed_at + occurred_at + source + metadata + text
 ```
 
-If `OPEN_MEMORY_INGEST_LLM` or `OPEN_MEMORY_LLM` is configured, the model can return category, tags, importance, reason, and whether the item should be kept, archived, or left for review. If no model is configured, local rules do the same job as a fallback.
+If `OPEN_MEMORY_INGEST_LLM`, `OPEN_MEMORY_LLM`, or an event-level `llm` value is configured, the model returns category, tags, importance, reason, and whether the item should be kept, archived, or left for review. High-importance `kept` events are promoted into long-term memory automatically. If no model is configured, local rules do the same job as a fallback.
 
 Importance is not a one-shot decision. Events start with `initial_importance`, then future versions can update `current_importance`, `importance_reason`, and `last_reassessed_at` as projects repeat, decisions change, or the user corrects the system.
 
@@ -131,6 +131,7 @@ Provider notes:
 - `lmstudio:<model>` calls LM Studio's OpenAI-compatible local server. Override the endpoint with `LM_STUDIO_URL`.
 - `openai:<model>` calls the OpenAI Responses API and requires `OPENAI_API_KEY`.
 - `OPEN_MEMORY_INGEST_LLM` can use a different model just for event importance triage.
+- `POST /events` also accepts `"llm": "ollama:qwen2.5"` for per-event importance triage.
 
 ### Local LLM Setup
 

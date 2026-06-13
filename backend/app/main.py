@@ -1,4 +1,5 @@
 from datetime import date
+import json
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
@@ -110,6 +111,7 @@ def query(payload: QueryRequest):
 
 
 def row_to_event(row) -> dict:
+    metadata = parse_metadata(row["metadata"])
     return {
         "id": row["id"],
         "text": row["text"],
@@ -118,7 +120,16 @@ def row_to_event(row) -> dict:
         "importance_reason": row["importance_reason"],
         "review_status": row["review_status"],
         "source": row["source"],
+        "assessed_by": metadata.get("assessed_by"),
         "started_at": row["started_at"],
         "ended_at": row["ended_at"],
         "created_at": row["created_at"],
     }
+
+
+def parse_metadata(raw: str) -> dict:
+    try:
+        decoded = json.loads(raw)
+    except json.JSONDecodeError:
+        return {}
+    return decoded if isinstance(decoded, dict) else {}

@@ -16,14 +16,14 @@ class MemoryPipeline:
         self.store = store or MemoryStore()
 
     def ingest_event(self, payload: EventCreate):
-        assessment = assess_event(payload)
+        assessment = assess_event(payload, payload.llm)
         metadata = {
             **payload.metadata,
             "captured_at": assessment.assessed_at.isoformat(),
             "assessed_at": assessment.assessed_at.isoformat(),
             "assessed_by": assessment.assessed_by,
         }
-        return self.store.add_event(
+        row = self.store.add_event(
             text=payload.text,
             category=assessment.category.value,
             importance=assessment.importance,
@@ -35,6 +35,15 @@ class MemoryPipeline:
             started_at=payload.started_at,
             ended_at=payload.ended_at,
         )
+        if assessment.review_status == "kept" and assessment.importance >= 0.75:
+            source_day = datetime.fromisoformat(row["created_at"]).date()
+            self.store.add_long_term_memory(
+                memory_type=assessment.category.value,
+                text=row["text"],
+                confidence=min(0.95, assessment.importance),
+                source_day=source_day,
+            )
+        return row
 
     def summarize_day(self, day: date):
         events = self.store.list_events_for_day(day)

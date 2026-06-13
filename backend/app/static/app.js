@@ -11,6 +11,7 @@ const text = {
     reflect: "Reflect",
     capture: "Capture",
     capturePlaceholder: "Drop a memory, transcript, idea, decision, or todo...",
+    triagePlaceholder: "Triage LLM, e.g. ollama:qwen2.5 (optional)",
     save: "Save Memory",
     inbox: "Auto Triage",
     timeline: "Timeline",
@@ -25,6 +26,7 @@ const text = {
     delete: "Delete",
     importance: "importance",
     confidence: "confidence",
+    assessedBy: "assessed by",
     thinking: "Thinking...",
     askError: "Ask failed",
   },
@@ -34,6 +36,7 @@ const text = {
     reflect: "反思",
     capture: "捕捉",
     capturePlaceholder: "写下一条记忆、转录、想法、决定或待办...",
+    triagePlaceholder: "重要性判断模型，例如 ollama:qwen2.5（可选）",
     save: "保存记忆",
     inbox: "自动分流",
     timeline: "时间线",
@@ -48,6 +51,7 @@ const text = {
     delete: "删除",
     importance: "重要性",
     confidence: "置信度",
+    assessedBy: "判断来源",
     thinking: "正在思考...",
     askError: "提问失败",
   },
@@ -98,8 +102,9 @@ function item(meta, text) {
 
 function eventItem(event, { reviewControls = false } = {}) {
   const occurredAt = event.started_at || event.created_at;
+  const assessedBy = event.assessed_by || "heuristic";
   const el = item(
-    `${occurredAt} / ${event.category} / ${event.review_status} / ${t("importance")} ${event.importance}`,
+    `${occurredAt} / ${event.category} / ${event.review_status} / ${t("importance")} ${event.importance} / ${t("assessedBy")} ${assessedBy}`,
     event.text,
   );
   const reason = document.createElement("div");
@@ -182,9 +187,20 @@ async function deleteEvent(id) {
 byId("save").addEventListener("click", async () => {
   const text = byId("eventText").value.trim();
   if (!text) return;
+  const llm = byId("triageLlm").value.trim();
+  if (llm) {
+    localStorage.setItem("open-memory-triage-llm", llm);
+  } else {
+    localStorage.removeItem("open-memory-triage-llm");
+  }
   await request("/events", {
     method: "POST",
-    body: JSON.stringify({ text, source: "dashboard", started_at: new Date().toISOString() }),
+    body: JSON.stringify({
+      text,
+      source: "dashboard",
+      started_at: new Date().toISOString(),
+      ...(llm ? { llm } : {}),
+    }),
   });
   byId("eventText").value = "";
   await refresh();
@@ -231,6 +247,7 @@ byId("langZh").addEventListener("click", async () => {
 });
 
 applyLanguage();
+byId("triageLlm").value = localStorage.getItem("open-memory-triage-llm") || "";
 refresh().catch((error) => {
   byId("answer").textContent = error.message;
 });

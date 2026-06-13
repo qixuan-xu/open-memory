@@ -114,6 +114,41 @@ def test_parse_llm_ingest_assessment():
     assert assessment.review_status == "kept"
 
 
+def test_pipeline_uses_llm_for_ingest_importance(monkeypatch, tmp_path):
+    class FakeLLM:
+        def complete(self, prompt: str) -> str:
+            assert "occurred_at:" in prompt
+            return """
+            {
+              "category": "project",
+              "importance": 0.91,
+              "tags": ["Open Memory", "iOS"],
+              "importance_reason": "A concrete project implementation decision with timing context.",
+              "review_status": "kept"
+            }
+            """
+
+    monkeypatch.setattr("backend.app.services.ingest_assessment.create_llm_client", lambda config: FakeLLM())
+
+    store = MemoryStore(tmp_path / "memory.sqlite3")
+    pipeline = MemoryPipeline(store)
+    event = pipeline.ingest_event(
+        EventCreate(
+            text="今天决定 iPhone 端输入后直接让 LLM 判断重要性。",
+            source="test",
+            started_at="2026-06-13T09:00:00+08:00",
+            llm="ollama:test-model",
+        )
+    )
+
+    assert event["category"] == "project"
+    assert event["current_importance"] == 0.91
+    assert event["importance_reason"] == "A concrete project implementation decision with timing context."
+    assert event["review_status"] == "kept"
+    assert '"assessed_by": "llm"' in event["metadata"]
+    assert store.list_long_term_memories(10)[0]["text"] == event["text"]
+
+
 def test_query_rejects_unknown_llm_provider(tmp_path):
     store = MemoryStore(tmp_path / "memory.sqlite3")
     pipeline = MemoryPipeline(store)
