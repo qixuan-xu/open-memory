@@ -107,45 +107,33 @@ open-memory models install whisper-small
 open-memory start
 ```
 
-Choose an LLM at runtime when starting the API:
+## LLM Setup
 
-```bash
-open-memory start --llm ollama:qwen2.5
-open-memory start --llm lmstudio:local-model
-open-memory start --llm openai:gpt-4.1
+Open Memory can run with no model, a local model, or a cloud model. The product still works without an LLM, but adding one unlocks two important behaviors:
+
+- **Ask**: answer questions with retrieved evidence and citations.
+- **Triage**: judge each new event's category, importance, tags, and whether it should become long-term memory.
+
+```text
+no LLM       retrieval-only, no network calls
+Ollama       local models such as qwen2.5
+LM Studio    local OpenAI-compatible chat server
+OpenAI       cloud Responses API
 ```
 
-Or ask from the CLI without starting the web server:
+### 1. Start Without A Model
 
-```bash
-open-memory ask "我之前对 ESP32 采集方案是什么看法？"
-open-memory ask "我之前对 ESP32 采集方案是什么看法？" --llm ollama:qwen2.5
-open-memory ask "我之前对 ESP32 采集方案是什么看法？" --llm lmstudio:local-model
-OPEN_MEMORY_LLM=openai:gpt-4.1 open-memory ask "What changed recently?"
-```
-
-Provider notes:
-
-- `none` is the default and never calls a model.
-- `ollama:<model>` calls a local Ollama server. Override the endpoint with `OLLAMA_URL`.
-- `lmstudio:<model>` calls LM Studio's OpenAI-compatible local server. Override the endpoint with `LM_STUDIO_URL`.
-- `openai:<model>` calls the OpenAI Responses API and requires `OPENAI_API_KEY`.
-- `OPEN_MEMORY_INGEST_LLM` can use a different model just for event importance triage.
-- `POST /events` also accepts `"llm": "ollama:qwen2.5"` for per-event importance triage.
-
-### Local LLM Setup
-
-Start Open Memory with retrieval only:
+This is the safest default. Nothing calls an LLM.
 
 ```bash
 open-memory start
 ```
 
-Then open <http://127.0.0.1:8000/>. The dashboard uses the LLM selected when the server was started. With the command above, no model is called.
+Then open <http://127.0.0.1:8000/>.
 
-To change the dashboard model, stop the server with `Ctrl+C` and restart with a different `--llm` value.
+### 2. Use Ollama
 
-Use Ollama:
+Install or start Ollama, pull a model, then start Open Memory with that model:
 
 ```bash
 ollama pull qwen2.5:7b
@@ -154,34 +142,83 @@ open-memory start --llm ollama:qwen2.5:7b
 
 If `ollama serve` says `address already in use`, Ollama is already running. Continue with `ollama pull ...` and `open-memory start ...`.
 
-Use LM Studio:
+Override the Ollama endpoint if needed:
+
+```bash
+OLLAMA_URL=http://localhost:11434/api/generate open-memory start --llm ollama:qwen2.5:7b
+```
+
+### 3. Use LM Studio
+
+LM Studio works through its OpenAI-compatible local server:
 
 1. Open LM Studio.
 2. Load a model.
 3. Start the Local Server.
-4. Use the model id shown by LM Studio.
+4. Use the model id shown in LM Studio.
 
 ```bash
 open-memory start --llm lmstudio:local-model
 ```
 
-For example:
+Override the endpoint if you changed LM Studio's port:
 
 ```bash
-open-memory start --llm lmstudio:medius-erebus-magnum-14b
+LM_STUDIO_URL=http://localhost:1234/v1/chat/completions open-memory start --llm lmstudio:local-model
 ```
 
-The default LM Studio endpoint is:
+### 4. Use OpenAI
 
-```text
-http://localhost:1234/v1/chat/completions
-```
-
-Use OpenAI:
+Set an API key in your shell or `.env`, then choose an OpenAI model:
 
 ```bash
-export OPENAI_API_KEY="your-api-key"
+export OPENAI_API_KEY="replace-with-your-key"
 open-memory start --llm openai:gpt-4.1
+```
+
+### 5. Pick A Separate Triage Model
+
+By default, `--llm` powers both question answering and event importance triage. You can use a smaller or cheaper model just for ingest:
+
+```bash
+OPEN_MEMORY_INGEST_LLM=ollama:qwen2.5:7b open-memory start --llm openai:gpt-4.1
+```
+
+You can also pass a model for one event:
+
+```bash
+curl -X POST http://127.0.0.1:8000/events \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "明天必须继续做 iPhone VAD，优先解决后台录音状态显示。",
+    "source": "manual",
+    "llm": "ollama:qwen2.5:7b"
+  }'
+```
+
+The LLM should return structured triage:
+
+```json
+{
+  "category": "project",
+  "importance": 0.86,
+  "tags": ["iPhone", "VAD"],
+  "importance_reason": "Time-sensitive project follow-up.",
+  "review_status": "kept"
+}
+```
+
+High-importance `kept` events are promoted into long-term memory automatically.
+
+### 6. Ask From The CLI
+
+You can ask without opening the dashboard:
+
+```bash
+open-memory ask "我之前对 ESP32 采集方案是什么看法？"
+open-memory ask "我之前对 ESP32 采集方案是什么看法？" --llm ollama:qwen2.5:7b
+open-memory ask "What changed recently?" --llm lmstudio:local-model
+OPEN_MEMORY_LLM=openai:gpt-4.1 open-memory ask "What should I follow up tomorrow?"
 ```
 
 Answer citations use short source labels:

@@ -34,7 +34,7 @@ Add Info.plist privacy strings:
 For local backend testing from a physical iPhone, set `OPEN_MEMORY_API_BASE_URL` to a reachable LAN URL such as:
 
 ```text
-http://192.168.1.20:8000
+http://<YOUR_MAC_LAN_IP>:8000
 ```
 
 If you use plain HTTP during development, add an App Transport Security exception for that host. Production builds should use HTTPS.

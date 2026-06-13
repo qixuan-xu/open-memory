@@ -108,14 +108,14 @@ def configured_database_path() -> Path:
     if CONFIG_PATH.exists():
         config = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
         return Path(config["database"])
-    return Path(os.getenv("ALLEN_MEMORY_DB", "./allen_memory.sqlite3"))
+    return Path(os.getenv("OPEN_MEMORY_DB", "./open_memory.sqlite3"))
 
 
 def start_server(llm: str | None = None) -> None:
     env = os.environ.copy()
     if CONFIG_PATH.exists():
         config = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
-        env["ALLEN_MEMORY_DB"] = config["database"]
+        env["OPEN_MEMORY_DB"] = config["database"]
     if llm:
         env["OPEN_MEMORY_LLM"] = llm
     cmd = ["uvicorn", "backend.app.main:app", "--host", "127.0.0.1", "--port", "8000"]

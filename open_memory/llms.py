@@ -30,7 +30,7 @@ class LLMConfig:
 
     @classmethod
     def from_spec(cls, spec: str | None = None) -> "LLMConfig":
-        selected = spec or os.getenv("OPEN_MEMORY_LLM") or os.getenv("ALLEN_MEMORY_LLM") or DEFAULT_LLM
+        selected = spec or os.getenv("OPEN_MEMORY_LLM") or DEFAULT_LLM
         selected = selected.strip()
         if selected == DEFAULT_LLM:
             return cls(provider=DEFAULT_LLM)
